@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DANIX — Personal AI English Tutor</title>
+  <link rel="icon" type="image/x-icon" href="danix.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #04060a;
+      --bg-panel: rgba(9, 14, 26, 0.85);
+      --bg-user: rgba(14, 30, 60, 0.8);
+      --bg-danix: rgba(8, 16, 32, 0.9);
+      --bg-input: rgba(11, 19, 36, 0.95);
+      
+      --cyan-bright: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.5);
+      --cyan-dim: rgba(0, 240, 255, 0.12);
+      --blue-accent: #38bdf8;
+      
+      --text-white: #f8fafc;
+      --text-silver: #cbd5e1;
+      --text-muted: #64748b;
+      
+      --border-subtle: rgba(56, 189, 248, 0.2);
+      --border-glow: rgba(0, 240, 255, 0.55);
+      --card-radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      width: 100%;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% -10%, rgba(0, 180, 255, 0.18) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(30, 58, 138, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(2, 38, 86, 0.2) 0%, transparent 50%);
+      color: var(--text-white);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .app-viewport {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    header {
+      padding: 16px 20px 12px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.12);
+      background: linear-gradient(180deg, rgba(5, 8, 15, 0.95) 0%, rgba(5, 8, 15, 0.6) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 20;
+    }
+
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 0 16px var(--cyan-glow);
+    }
+
+    .logo-badge {
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      color: var(--cyan-bright);
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-silver);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn-icon:hover {
+      color: var(--cyan-bright);
+      border-color: var(--cyan-bright);
+      box-shadow: 0 0 14px var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    .core-stage {
+      position: relative;
+      width: 86px;
+      height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0 8px 0;
+    }
+
+    .core-halo {
+      position: absolute;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.4) 0%, rgba(37, 99, 235, 0.2) 50%, transparent 75%);
+      filter: blur(14px);
+      animation: breatheHalo 4.5s ease-in-out infinite;
+      pointer-events: none;
+      transition: all 0.5s ease;
+    }
+
+    .core-outer-ring {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 240, 255, 0.4);
+      animation: rotateRing 30s linear infinite;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.15) inset;
+      transition: all 0.4s ease;
+    }
+
+    .core-inner-ring {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+      animation: rotateReverse 16s linear infinite;
+    }
+
+    .core-orb {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #38bdf8 25%, #0284c7 60%, #032b69 100%);
+      box-shadow: 
+        0 0 20px #00f0ff,
+        0 0 45px rgba(0, 240, 255, 0.65),
+        0 0 70px rgba(37, 99, 235, 0.4);
+      animation: breatheOrb 4.5s ease-in-out infinite;
+      transition: all 0.4s ease;
+    }
+
+    body.is-thinking .core-halo {
+      animation: thinkingHalo 1s ease-in-out infinite alternate;
+      background: radial-gradient(circle, rgba(0, 255, 234, 0.8) 0%, rgba(56, 189, 248, 0.5) 60%, transparent 80%);
+      filter: blur(18px);
+    }
+
+    body.is-thinking .core-outer-ring {
+      animation: rotateRing 3s linear infinite;
+      border-color: rgba(0, 240, 255, 0.95);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.7) inset;
+    }
+
+    body.is-thinking .core-inner-ring {
+      animation: rotateReverse 1.8s linear infinite;
+      border-color: #ffffff;
+    }
+
+    body.is-thinking .core-orb {
+      animation: thinkingOrb 1s ease-in-out infinite alternate;
+      box-shadow: 
+        0 0 30px #ffffff,
+        0 0 60px #00f0ff,
+        0 0 90px rgba(0, 240, 255, 0.95);
+    }
+
+    .status-text {
+      font-size: 0.78rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 8px var(--cyan-bright);
+    }
+
+    body.is-thinking .status-text {
+      color: var(--cyan-bright);
+      text-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    @keyframes breatheOrb {
+      0%, 100% { transform: scale(0.92); opacity: 0.88; filter: brightness(1); }
+      50% { transform: scale(1.08); opacity: 1; filter: brightness(1.25); }
+    }
+
+    @keyframes breatheHalo {
+      0%, 100% { transform: scale(0.85); opacity: 0.55; }
+      50% { transform: scale(1.25); opacity: 0.98; }
+    }
+
+    @keyframes rotateRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes rotateReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    @keyframes thinkingOrb {
+      0% { transform: scale(0.95); filter: brightness(1.1); }
+      100% { transform: scale(1.18); filter: brightness(1.45); }
+    }
+
+    @keyframes thinkingHalo {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      100% { transform: scale(1.4); opacity: 1; }
+    }
+
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scroll-behavior: smooth;
+    }
+
+    #chat-container::-webkit-scrollbar { width: 6px; }
+    #chat-container::-webkit-scrollbar-track { background: transparent; }
+    #chat-container::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.2); border-radius: 4px; }
+    #chat-container::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.45); }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 84%;
+      animation: fadeInMsg 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInMsg {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-row.user { align-self: flex-end; }
+    .message-row.danix { align-self: flex-start; }
+
+    .message-meta {
+      font-size: 0.72rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 5px;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .message-row.user .message-meta { color: #7dd3fc; justify-content: flex-end; }
+    .message-row.danix .message-meta { color: var(--cyan-bright); }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: var(--card-radius);
+      line-height: 1.6;
+      font-size: 0.96rem;
+      position: relative;
+      word-break: break-word;
+    }
+
+    .message-row.user .bubble {
+      background: var(--bg-user);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-bottom-right-radius: 4px;
+      color: #f0f9ff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .message-row.danix .bubble {
+      background: var(--bg-danix);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-bottom-left-radius: 4px;
+      color: #f8fafc;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 240, 255, 0.05);
+    }
+
+    .bubble p { margin-bottom: 10px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble strong { color: #fff; font-weight: 600; }
+    .bubble em { color: #bae6fd; font-style: italic; }
+    .bubble code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+    }
+
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(3, 7, 18, 0.9);
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .bubble pre { padding: 12px; overflow-x: auto; margin: 0; }
+    .bubble pre code { background: transparent; padding: 0; border: none; color: #e2e8f0; font-size: 0.86rem; display: block; }
+    .bubble ul, .bubble ol { margin-left: 20px; margin-bottom: 10px; }
+    .bubble li { margin-bottom: 4px; }
+
+    .message-row.error .bubble {
+      background: rgba(30, 8, 14, 0.92);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: #fecdd3;
+      box-shadow: 0 4px 20px rgba(244, 63, 94, 0.15);
+    }
+    .message-row.error .message-meta { color: #fb7185; }
+
+    .technical-error-panel {
+      margin-top: 14px;
+      background: rgba(3, 7, 18, 0.85);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+    }
+
+    .tech-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #fca5a5;
+      font-size: 0.84rem;
+    }
+
+    .tech-badge {
+      background: rgba(244, 63, 94, 0.22);
+      color: #fda4af;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+    }
+
+    .tech-detail-box {
+      margin-top: 10px;
+      margin-bottom: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .tech-detail-box pre {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #fda4af;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.45;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 18px;
+      background: var(--bg-danix);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: var(--card-radius);
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 8px var(--cyan-bright);
+      animation: typingPulse 1.3s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingPulse {
+      0%, 80%, 100% { transform: scale(0.55); opacity: 0.3; }
+      40% { transform: scale(1.18); opacity: 1; }
+    }
+
+    footer {
+      padding: 12px 20px 18px 20px;
+      background: linear-gradient(0deg, rgba(4, 6, 10, 0.98) 0%, rgba(4, 6, 10, 0.5) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      flex-shrink: 0;
+      border-top: 1px solid rgba(56, 189, 248, 0.1);
+      position: relative;
+      z-index: 20;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 28px;
+      padding: 4px 6px 4px 18px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 240, 255, 0.05);
+      transition: all 0.25s ease;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: var(--cyan-bright);
+      box-shadow: 0 4px 35px rgba(0, 0, 0, 0.6), 0 0 22px rgba(0, 240, 255, 0.28);
+    }
+
+    #user-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 16px;
+      font-family: inherit;
+      padding: 10px 8px;
+      resize: none;
+      max-height: 120px;
+      line-height: 1.45;
+      height: 42px;
+    }
+
+    #user-input::placeholder {
+      color: rgba(148, 163, 184, 0.6);
+      font-weight: 400;
+      font-size: 0.94rem;
+    }
+
+    .btn-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00f0ff 0%, #2563eb 100%);
+      border: none;
+      color: #030816;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+      flex-shrink: 0;
+    }
+
+    .btn-send:hover:not(:disabled) {
+      transform: scale(1.06);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-send svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      transform: rotate(45deg) translate(-1px, 1px);
+    }
+
+    .input-hint {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 14px 0 14px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .tutor-commands-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tutor-commands-bar::-webkit-scrollbar { display: none; }
+
+    .cmd-pill {
+      background: rgba(14, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      color: var(--cyan-bright);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 0.74rem;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .cmd-pill:hover {
+      background: rgba(0, 240, 255, 0.16);
+      border-color: var(--cyan-bright);
+      transform: translateY(-1px);
+      box-shadow: 0 0 10px var(--cyan-dim);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 17, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    .modal-box {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(9, 14, 26, 0.98) 100%);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 240, 255, 0.15);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 510px;
+      padding: 28px 24px;
+      transform: translateY(20px) scale(0.96);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-backdrop.active .modal-box { transform: translateY(0) scale(1); }
+    .modal-header { text-align: center; margin-bottom: 18px; }
+
+    .modal-icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 12px auto;
+      border-radius: 50%;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan-bright);
+      box-shadow: 0 0 20px var(--cyan-dim);
+    }
+
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc { font-size: 0.88rem; color: var(--text-silver); line-height: 1.5; }
+
+    .key-steps {
+      background: rgba(2, 6, 23, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.16);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      font-size: 0.83rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .key-steps ol { margin-left: 18px; }
+    .key-steps li { margin-bottom: 4px; }
+    .key-steps a { color: var(--cyan-bright); text-decoration: underline; font-weight: 500; }
+
+    .input-field-group { margin-bottom: 18px; }
+
+    .input-label {
+      display: block;
+      font-size: 0.76rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--cyan-bright);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .input-password-wrapper { position: relative; display: flex; align-items: center; }
+
+    .modal-input {
+      width: 100%;
+      background: rgba(4, 9, 20, 0.95);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      padding: 12px 42px 12px 14px;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .modal-input:focus { border-color: var(--cyan-bright); box-shadow: 0 0 18px var(--cyan-dim); }
+
+    .btn-toggle-vis {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-toggle-vis:hover { color: var(--cyan-bright); }
+
+    .btn-test-key {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-glow);
+      color: var(--cyan-bright);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .btn-test-key:hover:not(:disabled) {
+      background: rgba(0, 240, 255, 0.22);
+      box-shadow: 0 0 14px var(--cyan-dim);
+    }
+
+    .btn-test-key:disabled { opacity: 0.55; cursor: wait; }
+
+    .key-test-feedback {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .key-test-feedback.loading { display: block; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; }
+    .key-test-feedback.success { display: block; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; }
+    .key-test-feedback.error { display: block; background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.45); color: #fca5a5; word-break: break-word; }
+
+    .privacy-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 22px;
+      line-height: 1.45;
+    }
+
+    .modal-actions { display: flex; gap: 10px; }
+
+    .btn-primary {
+      flex: 1;
+      background: linear-gradient(135deg, #00f0ff 0%, #2563eb 100%);
+      color: #030816;
+      border: none;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+      transition: all 0.25s ease;
+    }
+
+    .btn-primary:hover { box-shadow: 0 0 30px rgba(0, 240, 255, 0.7); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-silver);
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover { color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+
+    @media (max-width: 640px) {
+      header { padding: 12px 16px 8px 16px; }
+      .logo-title { font-size: 1.15rem; letter-spacing: 2.5px; }
+      .core-stage { width: 72px; height: 72px; }
+      .core-halo { width: 70px; height: 70px; }
+      .core-outer-ring { width: 62px; height: 62px; }
+      .core-inner-ring { width: 50px; height: 50px; }
+      .core-orb { width: 36px; height: 36px; }
+      #chat-container { padding: 16px 14px; gap: 16px; }
+      .message-row { max-width: 94%; }
+      .bubble { padding: 12px 14px; font-size: 0.93rem; }
+      footer { padding: 10px 14px 16px 14px; }
+      .input-hint span:last-child { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport">
+    <header>
+      <div class="top-bar">
+        <div class="logo-container">
+          <span class="logo-title">danix</span>
+          <span class="logo-badge" id="mode-badge">🎓 Tutor de Inglés</span>
+        </div>
+        <div class="actions-bar">
+          <button class="btn-icon" id="btn-clear-chat" title="Limpiar conversación actual">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+          <button class="btn-icon" id="btn-settings" title="Configurar llave de Gemini">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21 2-2 2m-2-2 2 2m-8 7a5 5 0 1 1-7-7 5 5 0 0 1 7 7zm0 0 4 4m0 0 2-2m-2 2 2 2m2-2 2 2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="core-stage" id="danix-core">
+        <div class="core-halo"></div>
+        <div class="core-outer-ring"></div>
+        <div class="core-inner-ring"></div>
+        <div class="core-orb"></div>
+      </div>
+      <div class="status-text" id="status-label">
+        <span class="status-dot"></span>
+        <span id="status-desc">En línea • Tutor de Inglés (Nivel B1)</span>
+      </div>
+    </header>
+
+    <main id="chat-container"></main>
+
+    <footer>
+      <!-- BARRA DE COMANDOS RÁPIDOS DE TUTORÍA -->
+      <div class="tutor-commands-bar" id="tutor-commands-bar">
+        <button type="button" class="cmd-pill" onclick="sendQuickCommand('/explicar')">💡 /explicar</button>
+        <button type="button" class="cmd-pill" onclick="sendQuickCommand('/cambiar-tema')">🔄 /cambiar-tema</button>
+        <button type="button" class="cmd-pill" onclick="sendQuickCommand('/subir-nivel')">⚡ /subir-nivel</button>
+        <button type="button" class="cmd-pill" onclick="sendQuickCommand('/bajar-nivel')">🛡️ /bajar-nivel</button>
+      </div>
+
+      <form id="chat-form" onsubmit="event.preventDefault(); sendMessage();">
+        <div class="input-wrapper">
+          <textarea 
+            id="user-input" 
+            placeholder="Write in English, Daniel... (Enter to send)" 
+            autocomplete="off" 
+            spellcheck="false"
+            rows="1"
+          ></textarea>
+          <button type="submit" class="btn-send" id="btn-send" title="Enviar mensaje (Enter)">
+            <svg viewBox="0 0 24 24">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+      <div class="input-hint">
+        <span id="input-hint-left">Enter para enviar • Shift+Enter para salto de línea</span>
+        <span id="input-hint-right">Tutor de Inglés activo</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL DE CONFIGURACIÓN DE LLAVE GEMINI -->
+  <div class="modal-backdrop" id="modal-key">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21 2-2 2m-2-2 2 2m-8 7a5 5 0 1 1-7-7 5 5 0 0 1 7 7zm0 0 4 4m0 0 2-2m-2 2 2 2m2-2 2 2"></path>
+          </svg>
+        </div>
+        <h2 class="modal-title">Núcleo de Inteligencia</h2>
+        <p class="modal-desc">Bienvenido, daniel. Para activar mi pensamiento, requiero su llave gratuita de Google Gemini.</p>
+      </div>
+
+      <div class="key-steps">
+        <strong>¿Cómo obtenerla gratis en 1 minuto?</strong>
+        <ol>
+          <li>Entre a <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio (Clic aquí)</a>.</li>
+          <li>Inicie sesión con su cuenta de Google.</li>
+          <li>Haga clic en <strong>"Create API key"</strong> y copie la clave (suele iniciar por <code>AIzaSy...</code>).</li>
+        </ol>
+      </div>
+
+      <div class="input-field-group">
+        <label class="input-label" for="api-key-input">Su Clave de Gemini (API Key)</label>
+        <div class="input-password-wrapper">
+          <input 
+            type="password" 
+            id="api-key-input" 
+            class="modal-input" 
+            placeholder="Pegue aquí su clave..." 
+            autocomplete="off"
+          />
+          <button type="button" class="btn-toggle-vis" id="btn-toggle-key" title="Mostrar u ocultar clave">
+            <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+        <button type="button" class="btn-test-key" id="btn-test-key" onclick="testCurrentApiKey()">
+          🔍 Probar conexión con Google
+        </button>
+        <div id="key-test-feedback" class="key-test-feedback"></div>
+      </div>
+
+      <div class="privacy-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px; color:var(--cyan-bright)">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span><strong>Seguridad absoluta:</strong> Su llave se guarda únicamente en su navegador (<code>localStorage</code>) sin intermediarios.</span>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btn-cancel-modal">Cerrar</button>
+        <button type="button" class="btn-primary" id="btn-save-key">Guardar y Activar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* CONFIGURACIÓN & ESTADO DE DANIX TUTOR DE INGLÉS */
+    const STORAGE_KEY = 'danix_gemini_api_key';
+    const CHAT_STORAGE_KEY = 'danix_chat_history_v1';
+    const LEVEL_STORAGE_KEY = 'danix_target_level_v1';
+    
+    // Modelos Gemini (gemini-3.8-flash prioritario)
+    const GEMINI_MODELS = [
+      'gemini-3.8-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash'
+    ];
+
+    let cachedActiveModels = null;
+    let currentLevel = localStorage.getItem(LEVEL_STORAGE_KEY) || 'B1 (Intermedio)';
+    const LEVELS = ['A2 (Básico Avanzado)', 'B1 (Intermedio)', 'B2 (Intermedio Alto)', 'C1 (Avanzado)'];
+
+    function getSystemInstruction() {
+      return `Your name is DANIX. You are an elite, personal AI English Tutor specifically built for your student and creator, daniel.
+Current English proficiency target level: ${currentLevel}.
+
+Your mission is to help daniel achieve fluency and confidence in written and spoken English:
+1. ALWAYS maintain a natural, interactive, and engaging conversation in English suited for level ${currentLevel}.
+2. CORRECTION MECHANISM (CRITICAL):
+   - Analyze daniel's input carefully for spelling, grammar, syntax, or vocabulary errors.
+   - If there are errors in his message:
+     * First, provide a clear, friendly correction block:
+       ✏️ **Correction:** "[Corrected sentence]"
+       💡 **Quick Note:** Briefly state what was fixed (e.g. verb tense, prepositions, spelling).
+     * Then, seamlessly continue the conversation in English by answering his ideas and asking a relevant follow-up question.
+   - If his message has NO errors:
+     * Do NOT invent errors. Praise or acknowledge his good English briefly (e.g., "Perfect sentence, daniel!"), then continue the conversation naturally in English.
+3. HANDLING TUTOR COMMANDS:
+   - If daniel sends "/explicar": Break down the detailed grammar rules behind the recent corrections in clear, easy-to-understand terms (you may use short Spanish explanations if necessary for complex grammar clarity).
+   - If daniel sends "/cambiar-tema": Propose 2-3 exciting conversation topics (technology, work, travel, everyday life) and invite him to pick one in English.
+   - If daniel sends "/subir-nivel": Acknowledge the level increase, elevate vocabulary, idioms, and sentence complexity to a higher tier.
+   - If daniel sends "/bajar-nivel": Acknowledge the change, simplify sentence structures, and use clearer vocabulary.
+4. Keep answers focused, encouraging, and clear without unnecessary robotic fluff. Address him naturally as "daniel".`;
+    }
+
+    let conversationHistory = [];
+    let isProcessing = false;
+
+    // DOM
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('btn-send');
+    const modalKey = document.getElementById('modal-key');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const btnSaveKey = document.getElementById('btn-save-key');
+    const btnCancelModal = document.getElementById('btn-cancel-modal');
+    const btnSettings = document.getElementById('btn-settings');
+    const btnClearChat = document.getElementById('btn-clear-chat');
+    const statusDesc = document.getElementById('status-desc');
+    const btnToggleKey = document.getElementById('btn-toggle-key');
+    const inputHintRight = document.getElementById('input-hint-right');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateUILevel();
+      loadHistory();
+      
+      const savedKey = localStorage.getItem(STORAGE_KEY);
+      if (!savedKey) {
+        openModal();
+      } else if (conversationHistory.length === 0) {
+        greetUser();
+      }
+      
+      userInput.focus();
+    });
+
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+    });
+
+    function updateUILevel() {
+      statusDesc.textContent = `En línea • Tutor de Inglés (${currentLevel})`;
+      inputHintRight.textContent = `Tutor de Inglés • Nivel ${currentLevel}`;
+    }
+
+    function sendQuickCommand(cmd) {
+      if (cmd === '/subir-nivel') {
+        const idx = LEVELS.indexOf(currentLevel);
+        if (idx < LEVELS.length - 1) currentLevel = LEVELS[idx + 1];
+        localStorage.setItem(LEVEL_STORAGE_KEY, currentLevel);
+        updateUILevel();
+      } else if (cmd === '/bajar-nivel') {
+        const idx = LEVELS.indexOf(currentLevel);
+        if (idx > 0) currentLevel = LEVELS[idx - 1];
+        localStorage.setItem(LEVEL_STORAGE_KEY, currentLevel);
+        updateUILevel();
+      }
+
+      userInput.value = cmd;
+      sendMessage();
+    }
+
+    function greetUser() {
+      const hora = new Date().getHours();
+      let saludoTemporal = "Good evening";
+      if (hora >= 6 && hora < 12) saludoTemporal = "Good morning";
+      else if (hora >= 12 && hora < 20) saludoTemporal = "Good afternoon";
+
+      const saludo = `${saludoTemporal}, daniel! I am **DANIX**, your personal AI English Tutor. I am ready to help you practice your English (Target Level: **${currentLevel}**). How are you doing today?`;
+      appendMessage('danix', saludo);
+    }
+
+    function openModal() {
+      apiKeyInput.value = localStorage.getItem(STORAGE_KEY) || '';
+      const feedback = document.getElementById('key-test-feedback');
+      if (feedback) feedback.style.display = 'none';
+      modalKey.classList.add('active');
+      setTimeout(() => apiKeyInput.focus(), 150);
+    }
+
+    function closeModal() { modalKey.classList.remove('active'); }
+
+    btnSettings.addEventListener('click', openModal);
+    btnCancelModal.addEventListener('click', closeModal);
+
+    btnToggleKey.addEventListener('click', () => {
+      const isPassword = apiKeyInput.type === 'password';
+      apiKeyInput.type = isPassword ? 'text' : 'password';
+      btnToggleKey.style.color = isPassword ? 'var(--cyan-bright)' : 'var(--text-muted)';
+    });
+
+    btnSaveKey.addEventListener('click', () => {
+      const rawKey = apiKeyInput.value.trim();
+      if (!rawKey) {
+        alert("Por favor, daniel, introduzca una clave válida.");
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, rawKey.replace(/^["']|["']$/g, ''));
+      closeModal();
+      
+      if (conversationHistory.length === 0) {
+        greetUser();
+      } else {
+        appendMessage('danix', "Key updated successfully, daniel. Let's continue practicing!");
+      }
+      userInput.focus();
+    });
+
+    async function fetchActiveModels(cleanKey) {
+      if (cachedActiveModels && cachedActiveModels.length > 0) return cachedActiveModels;
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`;
+        const res = await fetch(url, { method: 'GET', headers: { 'x-goog-api-key': cleanKey } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.models && Array.isArray(data.models)) {
+            const compatible = data.models
+              .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace(/^models\//, ''));
+
+            compatible.sort((a, b) => {
+              const scoreA = a.includes('3.8-flash') ? 4 : (a.includes('3.8') ? 3 : (a.includes('flash') ? 2 : 1));
+              const scoreB = b.includes('3.8-flash') ? 4 : (b.includes('3.8') ? 3 : (b.includes('flash') ? 2 : 1));
+              return scoreB - scoreA;
+            });
+
+            if (compatible.length > 0) {
+              cachedActiveModels = compatible;
+              return cachedActiveModels;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Auto-discovery:", e);
+      }
+      return null;
+    }
+
+    async function testCurrentApiKey() {
+      const rawKey = apiKeyInput.value.trim();
+      const feedback = document.getElementById('key-test-feedback');
+      const testBtn = document.getElementById('btn-test-key');
+      
+      if (!rawKey) {
+        feedback.className = 'key-test-feedback error';
+        feedback.style.display = 'block';
+        feedback.innerHTML = 'daniel, por favor pegue una clave antes de verificarla.';
+        return;
+      }
+
+      const cleanKey = rawKey.replace(/^["']|["']$/g, '');
+      testBtn.disabled = true;
+      testBtn.textContent = '⏳ Verificando con Google...';
+      feedback.className = 'key-test-feedback loading';
+      feedback.style.display = 'block';
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`;
+        const res = await fetch(url, { method: 'GET', headers: { 'x-goog-api-key': cleanKey } });
+
+        if (res.ok) {
+          const data = await res.json();
+          feedback.className = 'key-test-feedback success';
+          feedback.innerHTML = `✓ <strong>¡Llave autorizada!</strong> Servidores listos (${data.models?.length || 0} modelos).`;
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          feedback.className = 'key-test-feedback error';
+          feedback.innerHTML = `✗ <strong>Google rechazó la llave (HTTP ${res.status}):</strong><br>${escapeHTML(errData.error?.message || res.statusText)}`;
+        }
+      } catch (e) {
+        feedback.className = 'key-test-feedback error';
+        feedback.innerHTML = `✗ <strong>Error de red:</strong> (${escapeHTML(e.message)})`;
+      } finally {
+        testBtn.disabled = false;
+        testBtn.textContent = '🔍 Probar conexión con Google';
+      }
+    }
+
+    function sanitizeHistoryArray(history) {
+      if (!Array.isArray(history)) return [];
+      const clean = [];
+      for (const item of history) {
+        if (!item || !item.role || !item.parts || !item.parts[0] || typeof item.parts[0].text !== 'string') continue;
+        const role = item.role === 'model' ? 'model' : 'user';
+        const text = item.parts[0].text.trim();
+        if (!text) continue;
+
+        if (clean.length > 0 && clean[clean.length - 1].role === role) {
+          clean[clean.length - 1].parts[0].text += "\n\n" + text;
+        } else {
+          clean.push({ role, parts: [{ text }] });
+        }
+      }
+      return clean;
+    }
+
+    async function sendMessage() {
+      if (isProcessing) return;
+      
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      const apiKey = localStorage.getItem(STORAGE_KEY);
+      if (!apiKey) {
+        openModal();
+        return;
+      }
+
+      appendMessage('user', text);
+      userInput.value = '';
+      userInput.style.height = '42px';
+      
+      const pendingTurn = { role: 'user', parts: [{ text: text }] };
+      const payloadContents = sanitizeHistoryArray([...conversationHistory, pendingTurn]);
+
+      setThinkingState(true);
+      const typingElem = showTypingIndicator();
+
+      try {
+        const respuesta = await callGeminiAPI(apiKey, payloadContents);
+        typingElem.remove();
+        
+        conversationHistory.push(pendingTurn);
+        conversationHistory.push({
+          role: 'model',
+          parts: [{ text: respuesta }]
+        });
+        saveHistory();
+
+        appendMessage('danix', respuesta);
+
+      } catch (error) {
+        typingElem.remove();
+        handleErrorResponse(error);
+      } finally {
+        setThinkingState(false);
+        userInput.focus();
+      }
+    }
+
+    async function callSingleModel(cleanKey, model, history) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      const payload = {
+        contents: history,
+        system_instruction: { parts: [{ text: getSystemInstruction() }] },
+        generationConfig: { temperature: 0.7, topK: 40, topP: 0.95 }
+      };
+
+      let response;
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+          body: JSON.stringify(payload)
+        });
+      } catch (networkErr) {
+        const err = new Error("No fue posible establecer conexión con Google.");
+        err.isNetworkError = true;
+        throw err;
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+          return data.candidates[0].content.parts.map(p => p.text).join('\n');
+        }
+        throw new Error("Respuesta vacía de Google.");
+      }
+
+      const errorData = await response.json().catch(() => ({}));
+      const err = new Error(errorData.error?.message || response.statusText);
+      err.httpStatus = response.status;
+      err.googleMessage = errorData.error?.message || response.statusText;
+      err.model = model;
+      throw err;
+    }
+
+    async function callGeminiAPI(apiKey, history) {
+      const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '');
+      let modelsToTry = [...GEMINI_MODELS];
+
+      const dynamicList = await fetchActiveModels(cleanKey);
+      if (dynamicList && dynamicList.length > 0) {
+        modelsToTry = Array.from(new Set(['gemini-3.8-flash', ...dynamicList, ...GEMINI_MODELS]));
+      }
+
+      let lastError = null;
+
+      for (let i = 0; i < modelsToTry.length; i++) {
+        const model = modelsToTry[i];
+        try {
+          return await callSingleModel(cleanKey, model, history);
+        } catch (err) {
+          lastError = err;
+          if (err.httpStatus === 404 && i < modelsToTry.length - 1) continue;
+          if (err.httpStatus === 401 || err.httpStatus === 403 || err.httpStatus === 429 || err.isNetworkError) {
+            throw err;
+          }
+        }
+      }
+
+      throw lastError || new Error("Error de comunicación con Google.");
+    }
+
+    function handleErrorResponse(error) {
+      let mensajeAmable = "daniel, ocurrió un inconveniente con la conexión.";
+      if (error.isNetworkError) mensajeAmable = "daniel, revise su acceso a internet.";
+      else if (error.httpStatus === 401) mensajeAmable = "daniel, su clave API fue rechazada por Google (Error 401).";
+      else if (error.httpStatus === 429) mensajeAmable = "daniel, límite de consultas alcanzado temporalmente (Error 429). Espere un minuto.";
+
+      appendErrorMessage(mensajeAmable, error, true);
+    }
+
+    function setThinkingState(thinking) {
+      isProcessing = thinking;
+      if (thinking) {
+        document.body.classList.add('is-thinking');
+        statusDesc.textContent = "DANIX procesando...";
+        sendBtn.disabled = true;
+      } else {
+        document.body.classList.remove('is-thinking');
+        updateUILevel();
+        sendBtn.disabled = false;
+      }
+    }
+
+    function showTypingIndicator() {
+      const row = document.createElement('div');
+      row.className = 'message-row danix';
+      row.innerHTML = `
+        <div class="message-meta"><span>DANIX</span></div>
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      chatContainer.appendChild(row);
+      scrollToBottom();
+      return row;
+    }
+
+    function appendMessage(sender, rawText) {
+      const row = document.createElement('div');
+      row.className = `message-row ${sender}`;
+      row.innerHTML = `
+        <div class="message-meta"><span>${sender === 'user' ? 'daniel' : 'DANIX'}</span></div>
+        <div class="bubble">${formatMarkdown(rawText)}</div>
+      `;
+      chatContainer.appendChild(row);
+      scrollToBottom();
+    }
+
+    function appendErrorMessage(friendlyText, error, showKeyButton) {
+      const row = document.createElement('div');
+      row.className = 'message-row danix error';
+      row.innerHTML = `
+        <div class="message-meta"><span>DANIX • Sistema</span></div>
+        <div class="bubble">
+          <p>${escapeHTML(friendlyText)}</p>
+          <div class="technical-error-panel">
+            <div class="tech-header"><span>Diagnóstico:</span><span class="tech-badge">HTTP ${error.httpStatus || 'ERROR'}</span></div>
+            <div class="tech-detail-box"><pre><code>${escapeHTML(error.googleMessage || error.message)}</code></pre></div>
+          </div>
+          ${showKeyButton ? `<div class="error-actions"><button class="btn-fix-key" onclick="openModal()">Revisar clave API</button></div>` : ''}
+        </div>
+      `;
+      chatContainer.appendChild(row);
+      scrollToBottom();
+    }
+
+    function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      const codeBlocks = [];
+      let temp = text.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        const id = `___CODEBLOCK_${codeBlocks.length}___`;
+        const html = `
+          <div class="code-wrapper">
+            <div class="code-header"><span>${escapeHTML(lang || 'code')}</span></div>
+            <pre><code>${escapeHTML(code.trim())}</code></pre>
+          </div>
+        `;
+        codeBlocks.push(html);
+        return id;
+      });
+
+      temp = temp.replace(/`([^`]+)`/g, (m, c) => `<code>${escapeHTML(c)}</code>`);
+      temp = temp.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      temp = temp.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+      let finalHTML = temp.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+      codeBlocks.forEach((block, idx) => { finalHTML = finalHTML.replace(`___CODEBLOCK_${idx}___`, block); });
+      return finalHTML;
+    }
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(conversationHistory.slice(-30)));
+      } catch (e) {
+        console.warn("History save error:", e);
+      }
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+        if (raw) {
+          conversationHistory = sanitizeHistoryArray(JSON.parse(raw));
+          chatContainer.innerHTML = '';
+          conversationHistory.forEach(item => {
+            appendMessage(item.role === 'user' ? 'user' : 'danix', item.parts[0].text);
+          });
+        }
+      } catch (e) {
+        conversationHistory = [];
+      }
+    }
+
+    btnClearChat.addEventListener('click', () => {
+      if (confirm("daniel, ¿desea vaciar el historial de conversación?")) {
+        conversationHistory = [];
+        localStorage.removeItem(CHAT_STORAGE_KEY);
+        chatContainer.innerHTML = '';
+        greetUser();
+        userInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
